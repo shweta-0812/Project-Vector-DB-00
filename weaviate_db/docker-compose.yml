@@ -1,0 +1,67 @@
+# https://weaviate.io/developers/weaviate/installation
+# https://weaviate.io/developers/weaviate/configuration/authentication
+
+# Go to dir with docekr-compose.yml file and Run $docker-compose up -d
+---
+
+services:
+  weaviate:
+
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+
+    image: cr.weaviate.io/semitechnologies/weaviate:1.24.5
+
+    ports:
+    - 8080:8080
+    - 50051:50051 # Make sure a port for gRPC is open to Weaviate.The default port is 50051.
+
+    volumes:
+    - weaviate_data:/var/lib/weaviate
+    restart: on-failure:0
+
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+
+      # Authentication
+      # Enables API key authentication.
+      AUTHENTICATION_APIKEY_ENABLED: 'true'
+
+
+      # List one or more keys, separated by commas. Each key corresponds to a specific user identity below.
+      # The lengths of users and keys match, then nth key will map to nth user.
+      # shweta-secret-key is an admin (read & write) key, and test-secret-key is a read-only key.
+      AUTHENTICATION_APIKEY_ALLOWED_KEYS: 'shweta-secret-key,test-secret-key'
+
+      # List one or more user identities, separated by commas. Each identity corresponds to a specific key above.
+      AUTHENTICATION_APIKEY_USERS: 'shweta.itenggie@gmail.com,test-user'
+
+      # Enable unauthenticated connection
+      #AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+
+      # Authorization
+      AUTHORIZATION_ADMINLIST_ENABLED: 'true'
+      # ADMINS
+      AUTHORIZATION_ADMINLIST_USERS: 'shweta.itenggie@gmail.com'
+      # READONLY
+      AUTHORIZATION_ADMINLIST_READONLY_USERS: 'test-user'
+
+      # It's recommended to set a persistent volume to avoid data loss.Make sure to run docker compose down when shutting down. This writes all the files from memory to disk. After running a docker compose up -d, Docker will create a named volume weaviate_data and mount it to the PERSISTENCE_DATA_PATH inside the container.
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+
+      # Search already vectorized data – no vectorizer required.
+      DEFAULT_VECTORIZER_MODULE: 'none'
+
+      # Run vector searches with JINA, HuggingFace, OpenAI
+      ENABLE_MODULES: 'text2vec-jinaai,text2vec-huggingface,text2vec-openai,generative-openai,qna-openai'
+
+      CLUSTER_HOSTNAME: 'weaviate_local_cluster'
+
+volumes:
+  weaviate_data:
+...

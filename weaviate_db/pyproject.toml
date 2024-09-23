@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "main"
+version = "0.1.0"
+description = ""
+authors = ["shweta-0812"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "=3.12.6"
+python-dotenv = "=1.0.1"
+Django = "=5.1.1"
+graphene-django = "=3.2.1"
+django-filter = "=24.2"
+django-cors-headers = "=4.4.0"
+pydantic = "=2.7.4"
+gunicorn = "=23.0.0"
+flake8 = "=7.1.1"
+weaviate = "^0.1.0"
+weaviate-client = "^4.8.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
