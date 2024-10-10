@@ -54,8 +54,10 @@ INSTALLED_APPS = [
     "graphene_django",
     "corsheaders",
     "memory",
+    "llm",
     "vectorizer"
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

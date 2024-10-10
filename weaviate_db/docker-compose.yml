@@ -1,7 +1,7 @@
 # https://weaviate.io/developers/weaviate/installation
 # https://weaviate.io/developers/weaviate/configuration/authentication
 
-# Go to dir with docekr-compose.yml file and Run $docker-compose up -d
+# Go to dir with docker-compose.yml file and Run `$ docker compose up -d`
 ---
 
 services:
@@ -23,6 +23,7 @@ services:
 
     volumes:
     - weaviate_data:/var/lib/weaviate
+
     restart: on-failure:0
 
     environment:

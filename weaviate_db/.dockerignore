@@ -1,6 +1,4 @@
-weaviate_db/.env
-mongo_db/.env
-mongo_db/data/*
+.env
 
 .idea/
 
