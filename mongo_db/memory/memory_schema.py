@@ -91,7 +91,10 @@ class Query(ObjectType):
     sample_collection_detail = Field(SampleDataListingType)
 
     def resolve_sample_collection_detail(self, info):
-        return SampleDataListingType(database_name="airbnb_dataset",
-                                     collection_name="air_bnb_listings_reviews",
-                                     vector_search_index_name="airbnb_text_vector_idx",
-                                     vector_embedding_document_field_name="airbnb_text_embeddings")
+        db_name, collection_name = get_db_and_collection_for_sample_data()
+        vector_search_index_name = get_vector_search_index_name_for_sample_data()
+        vector_embedding_field_name = get_vector_embedding_field_name_for_sample_data()
+        return SampleDataListingType(database_name=db_name,
+                                     collection_name=collection_name,
+                                     vector_search_index_name=vector_search_index_name,
+                                     vector_embedding_document_field_name=vector_embedding_field_name)
