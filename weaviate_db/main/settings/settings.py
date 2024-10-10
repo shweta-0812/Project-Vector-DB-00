@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "graphene_django",
     "corsheaders",
     "memory",
+    "vectorizer"
 ]
 
 MIDDLEWARE = [
