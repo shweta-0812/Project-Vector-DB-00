@@ -1,9 +1,12 @@
 import openai
+from common_utils import get_env_key
+
+OPENAI_API_KEY = get_env_key('OPENAI_API_KEY')
+openai.api_key = OPENAI_API_KEY
 
 
-# LLM
 def generate_llm_response(query: str, context: str):
-    # Generate system response using OpenAI's completion
+    """Generate system response using OpenAI's completion"""
     completion = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[

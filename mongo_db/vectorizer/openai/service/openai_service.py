@@ -1,13 +1,11 @@
 import openai
-
 from common_utils import get_env_key
 
 OPENAI_API_KEY = get_env_key('OPENAI_API_KEY')
+openai.api_key = OPENAI_API_KEY
 
 
 def get_embedding(text):
-    openai.api_key = OPENAI_API_KEY
-
     """Generate an embedding for the given text using OpenAI's API."""
 
     # Check for valid input

@@ -2,7 +2,7 @@ from memory.mongo_db.vector_search.mongo_vector_search import index_vector_embed
 
 from memory.mongo_db.db.mongo_client import MongoConnection
 
-from llm.service.llm_service import generate_llm_response
+from llm.openai.service.llm_service import generate_llm_response
 
 
 def get_mongo_db_and_collection_conn(db_name: str, collection_name: str):
