@@ -120,6 +120,18 @@ class ListingSearchResultItem2(BaseModel):
     space: str = None
 
 
+# Note: Ensure that the  projection document in the projection stage matches the search result model.
+class ListingSearchResultItem3(BaseModel):
+    name: str
+    accommodates: Optional[int] = None
+    address: Address
+    summary: Optional[str] = None
+    space: Optional[str] = None
+    neighborhood_overview: Optional[str] = None
+    notes: Optional[str] = None
+    score: Optional[float]=None
+
+
 # NOTE: Make sure the HF_token is set in the env vars.
 # NOTE: This dataset contains text and image embeddings, but this lessons only uses the text embeddings
 def load_sample_data_from_huggingface():
@@ -193,7 +205,7 @@ def get_pre_filter_for_sample_data():
     pass
 
 
-def get_post_filter_additional_stages_for_sample_data():
+def get_post_filter_stage_for_sample_data():
     # Specifying the metadata field to limit documents on
     search_path = "address.country"
 
@@ -204,10 +216,31 @@ def get_post_filter_additional_stages_for_sample_data():
             "accommodates": {"$gt": 1, "$lt": 5}
         }
     }
+    return match_stage
 
-    additional_stages = [match_stage]
-    return additional_stages
 
+def get_projection_stage_for_sample_data():
+    projection_stage = {
+        "$project": {
+            "_id": 0,
+            "name": 1,
+            "accommodates": 1,
+            "address.street": 1,
+            "address.government_area": 1,
+            "address.market": 1,
+            "address.country": 1,
+            "address.country_code": 1,
+            "address.location.type": 1,
+            "address.location.coordinates": 1,
+            "address.location.is_location_exact": 1,
+            "summary": 1,
+            "space": 1,
+            "neighborhood_overview": 1,
+            "notes": 1,
+            "score": {"$meta": "vectorSearchScore"}
+        }
+    }
+    return projection_stage
 
 def get_vector_index_pre_filters_for_sample_data():
     return {
