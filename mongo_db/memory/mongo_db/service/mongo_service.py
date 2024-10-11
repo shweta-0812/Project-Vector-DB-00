@@ -50,3 +50,9 @@ def get_vector_search_result_for_query(query: str,
 def execute_rag_for_query_based_on_context(query: str, context: str) -> str:
     response = generate_llm_response(query=query, context=context)
     return response
+
+
+
+def execute_rag_with_compressed_query_based_on_context(query: str, context: str) -> str:
+    response = generate_llm_response(query=query, context=context)
+    return response
