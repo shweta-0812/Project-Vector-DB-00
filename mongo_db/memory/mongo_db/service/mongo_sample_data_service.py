@@ -102,7 +102,7 @@ class Listing(BaseModel):
     text_embeddings: List[float]
 
 
-class ListingSearchResultItem(BaseModel):
+class ListingSearchResultItem1(BaseModel):
     name: str
     accommodates: Optional[int] = None
     address: Address
@@ -129,7 +129,16 @@ class ListingSearchResultItem3(BaseModel):
     space: Optional[str] = None
     neighborhood_overview: Optional[str] = None
     notes: Optional[str] = None
-    score: Optional[float]=None
+    score: Optional[float] = None
+
+
+class ListingSearchResultItem4(BaseModel):
+    name: str
+    accommodates: Optional[int] = None
+    address: Address
+    averageReviewScore: Optional[float] = None
+    number_of_reviews: Optional[float] = None
+    combinedScore: Optional[float] = None
 
 
 # NOTE: Make sure the HF_token is set in the env vars.
@@ -241,6 +250,63 @@ def get_projection_stage_for_sample_data():
         }
     }
     return projection_stage
+
+
+def get_average_review_score_based_document_boosting_post_filter_for_sample_data():
+    average_review_score_stage = {
+        "$addFields": {
+            "averageReviewScore": {
+                "$divide": [
+                    {
+                        "$add": [
+                            "$review_scores.review_scores_accuracy",
+                            "$review_scores.review_scores_cleanliness",
+                            "$review_scores.review_scores_checkin",
+                            "$review_scores.review_scores_communication",
+                            "$review_scores.review_scores_location",
+                            "$review_scores.review_scores_value",
+                        ]
+                    },
+                    6  # Divide by the number of review score types to get the average
+                ]
+            },
+            # Calculate a score boost factor based on the number of reviews
+            "reviewCountBoost": "$number_of_reviews"
+        }
+    }
+
+    return average_review_score_stage
+
+
+def get_weighted_average_review_based_document_boosting_post_filter_for_sample_data():
+    # Note: it uses the averageReviewScore and reviewCountBoost field for average calculation
+    # from get_average_review_score_based_document_boosting_post_filter_for_sample_data()
+
+    weighted_average_review_stage = {
+        "$addFields": {
+            "combinedScore": {
+                # Formula that combines average review score and review count boost
+                "$add": [
+                    {"$multiply": ["$averageReviewScore", 0.9]},  # Weighted average review score
+                    {"$multiply": ["$reviewCountBoost", 0.1]}  # Weighted review count boost
+                ]
+            }
+        }
+    }
+
+    return weighted_average_review_stage
+
+
+def get_sorting_based_document_boosting_post_filter_for_sample_data():
+    # Note: it uses the combinedScore field for sorting
+    # from get_weighted_average_review_based_document_boosting_post_filter_for_sample_data()
+
+    # Apply the combinedScore for sorting
+    sorting_stage_sort = {
+        "$sort": {"combinedScore": -1}  # Descending order to boost higher combined scores
+    }
+    return sorting_stage_sort
+
 
 def get_vector_index_pre_filters_for_sample_data():
     return {

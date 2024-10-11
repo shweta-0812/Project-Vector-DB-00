@@ -5,9 +5,12 @@ from memory.mongo_db.service.mongo_service import create_vector_search_index_on_
 
 from memory.mongo_db.service.mongo_sample_data_service import load_sample_data, get_db_and_collection_for_sample_data, \
     get_vector_search_index_name_for_sample_data, get_vector_embedding_field_name_for_sample_data, \
-    get_post_filter_stage_for_sample_data, ListingSearchResultItem, ListingSearchResultItem2, ListingSearchResultItem3, \
+    get_post_filter_stage_for_sample_data, ListingSearchResultItem1, ListingSearchResultItem2, ListingSearchResultItem3,\
+    ListingSearchResultItem4, \
     get_vector_index_pre_filters_for_sample_data, get_query_pre_filters_for_sample_data, \
-    get_projection_stage_for_sample_data
+    get_projection_stage_for_sample_data, get_average_review_score_based_document_boosting_post_filter_for_sample_data,\
+    get_weighted_average_review_based_document_boosting_post_filter_for_sample_data, \
+    get_sorting_based_document_boosting_post_filter_for_sample_data
 
 
 class LoadSampleData(Mutation):
@@ -66,7 +69,7 @@ class RunRAGQuery(Mutation):
         if results != {}:
             # Convert search results into a list of SearchResultItem models
             search_results_models = [
-                ListingSearchResultItem(**result)
+                ListingSearchResultItem1(**result)
                 for result in results
             ]
 
@@ -110,7 +113,7 @@ class RunRAGQueryWithPreFilter(Mutation):
                                                      filters=filters)
         if bool(results):
             # Convert search results into a list of SearchResultItem models
-            search_results_models = [ListingSearchResultItem(**result) for result in results]
+            search_results_models = [ListingSearchResultItem2(**result) for result in results]
 
             search_results = [item.dict() for item in search_results_models]
             response = execute_rag_for_query_based_on_context(query=query, context=str(search_results))
@@ -189,6 +192,45 @@ class RunRAGQueryWithFieldProjections(Mutation):
         return RunRAGQueryWithFieldProjections(ok=True, response=response)
 
 
+class RunRAGQueryWithDocumentBoosting(Mutation):
+    ok = Boolean()
+    response = String()
+
+    class Arguments:
+        query = String()
+
+    def mutate(self, info, query):
+        """
+        query =
+            I want to stay in a place that's warm and friendly,
+            and not too far from restaurants, can you recommend a place?
+            Include a reason as to why you've chosen your selection.
+        """
+        db_name, collection_name = get_db_and_collection_for_sample_data()
+        vector_search_index_name = get_vector_search_index_name_for_sample_data()
+        vector_embedding_field_name = get_vector_embedding_field_name_for_sample_data()
+
+        # Note: order of stages matter
+        review_avg_stage = get_average_review_score_based_document_boosting_post_filter_for_sample_data()
+        weighted_avg_stage = get_weighted_average_review_based_document_boosting_post_filter_for_sample_data()
+        sorting_stage = get_sorting_based_document_boosting_post_filter_for_sample_data()
+
+        results = get_vector_search_result_for_query(db_name=db_name,
+                                                     collection_name=collection_name,
+                                                     vector_search_index_name=vector_search_index_name,
+                                                     vector_embedding_field_name=vector_embedding_field_name,
+                                                     additional_stages=[review_avg_stage, weighted_avg_stage, sorting_stage ],
+                                                     query=query)
+        if bool(results):
+            # Convert search results into a list of SearchResultItem models
+            search_results_models = [ListingSearchResultItem4(**result) for result in results]
+            search_results = [item.dict() for item in search_results_models]
+            response = execute_rag_for_query_based_on_context(query=query, context=str(search_results))
+        else:
+            response = "No response"
+        return RunRAGQueryWithDocumentBoosting(ok=True, response=response)
+
+
 class Mutation(ObjectType):
     load_sample_data = LoadSampleData.Field()
     create_vector_search_index = CreateVectorSearchIndex.Field()
@@ -196,7 +238,7 @@ class Mutation(ObjectType):
     run_rag_query_with_pre_filter = RunRAGQueryWithPreFilter.Field()
     run_rag_query_with_post_filter = RunRAGQueryWithPostFilter.Field()
     run_rag_query_with_projections = RunRAGQueryWithFieldProjections.Field()
-
+    run_rag_query_with_doc_boost = RunRAGQueryWithDocumentBoosting.Field()
 
 class SampleDataListingType(ObjectType):
     database_name = String()
