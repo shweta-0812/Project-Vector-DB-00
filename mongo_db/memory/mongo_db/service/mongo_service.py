@@ -18,26 +18,33 @@ def get_mongo_db_and_collection_conn(db_name: str, collection_name: str):
 def create_vector_search_index_on_collection(db_name: str,
                                              collection_name: str,
                                              vector_search_index_name: str,
-                                             vector_embedding_field_name: str
+                                             vector_embedding_field_name: str,
+                                             vector_index_pre_filters: dict = {}
                                              ):
     _, collection_conn = get_mongo_db_and_collection_conn(db_name=db_name, collection_name=collection_name)
     return index_vector_embeddings(collection_conn=collection_conn,
                                    vector_search_index_name=vector_search_index_name,
-                                   vector_embedding_field_name=vector_embedding_field_name
+                                   vector_embedding_field_name=vector_embedding_field_name,
+                                   vector_index_pre_filters=vector_index_pre_filters
                                    )
 
 
-def get_vector_search_result_for_query( query: str,
-                                        db_name: str,
-                                        vector_search_index_name: str,
-                                        vector_embedding_field_name: str,
-                                        collection_name: str) -> dict:
+def get_vector_search_result_for_query(query: str,
+                                       db_name: str,
+                                       collection_name: str,
+                                       vector_search_index_name: str,
+                                       vector_embedding_field_name: str,
+                                       additional_stages: list = [],
+                                       filters: dict = {}) -> dict:
     db_conn, collection_conn = get_mongo_db_and_collection_conn(db_name=db_name, collection_name=collection_name, )
     results = run_vs_for_query(query=query, db=db_conn,
                                collection=collection_conn,
                                vector_index=vector_search_index_name,
-                               text_embedding_field=vector_embedding_field_name)
-    return results if results else {}
+                               text_embedding_field=vector_embedding_field_name,
+                               additional_stages=additional_stages,
+                               filters=filters)
+
+    return results if isinstance(results, dict) else {}
 
 
 def execute_rag_for_query_based_on_context(query: str, context: str) -> str:

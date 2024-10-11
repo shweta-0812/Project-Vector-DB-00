@@ -1,3 +1,5 @@
+import re
+
 from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel, ValidationError
@@ -8,8 +10,14 @@ from memory.mongo_db.db.mongo_client import MongoConnection
 DATASET_URI = "MongoDB/airbnb_embeddings"
 DATABASE_NAME = "airbnb_dataset"
 COLLECTION_NAME = "air_bnb_listings_reviews"
+
+# MongoDB Atlas Vector Search index name
 VECTOR_SEARCH_INDEX_NAME = "airbnb_text_vector_idx"
-VECTOR_EMBEDDING_DOCUMENT_FIELD_NAME = "airbnb_text_embeddings"
+VECTOR_PRE_FILTER_SEARCH_INDEX_NAME = "airbnb_text_vector_with_filter_idx"
+
+# NOTE: This dataset contains text and image embeddings, but we only use the text embeddings
+# The field containing the text embeddings on each document within the collection
+VECTOR_EMBEDDING_DOCUMENT_FIELD_NAME = "text_embeddings"
 
 
 class Host(BaseModel):
@@ -104,6 +112,14 @@ class ListingSearchResultItem(BaseModel):
     notes: Optional[str] = None
 
 
+class ListingSearchResultItem2(BaseModel):
+    name: str
+    accommodates: Optional[int] = None
+    bedrooms: Optional[int] = None
+    address: Address
+    space: str = None
+
+
 # NOTE: Make sure the HF_token is set in the env vars.
 # NOTE: This dataset contains text and image embeddings, but this lessons only uses the text embeddings
 def load_sample_data_from_huggingface():
@@ -171,3 +187,43 @@ def get_vector_search_index_name_for_sample_data():
 
 def get_vector_embedding_field_name_for_sample_data():
     return VECTOR_EMBEDDING_DOCUMENT_FIELD_NAME
+
+
+def get_pre_filter_for_sample_data():
+    pass
+
+
+def get_post_filter_additional_stages_for_sample_data():
+    # Specifying the metadata field to limit documents on
+    search_path = "address.country"
+
+    # Create a match stage
+    match_stage = {
+        "$match": {
+            search_path: re.compile(r"United States"),
+            "accommodates": {"$gt": 1, "$lt": 5}
+        }
+    }
+
+    additional_stages = [match_stage]
+    return additional_stages
+
+
+def get_vector_index_pre_filters_for_sample_data():
+    return {
+        "accommodates": {
+            "type": "number"
+        },
+        "bedrooms": {
+            "type": "number"
+        }
+    }
+
+
+def get_query_pre_filters_for_sample_data():
+    return {
+        "$and": [
+            {"accommodates": {"$gte": 2}},
+            {"bedrooms": {"$lte": 7}}
+        ]
+    }
